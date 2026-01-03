@@ -18,7 +18,7 @@ export default function ContactForm() {
     setStatus('sending');
     
     // ⚠️ REEMPLAZA ESTA URL con tu "Test URL" de n8n (o la de Producción después)
-    const WEBHOOK_URL = 'TU_URL_DE_N8N_AQUÍ'; 
+    const WEBHOOK_URL = 'https://f1ernandoautomation.app.n8n.cloud/webhook/contact-form-business-solutions'; 
 
     try {
       const response = await fetch(WEBHOOK_URL, {
