@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 export default function ContactForm() {
+  // Estados para manejar los datos y el estado del envío
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -13,10 +15,42 @@ export default function ContactForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setStatus('sending');
     
-    // Aquí conectaremos a n8n después
-    console.log('Form submitted:', formData);
-    alert('Form submitted! (Will connect to n8n next)');
+    // ⚠️ REEMPLAZA ESTA URL con tu "Test URL" de n8n (o la de Producción después)
+    const WEBHOOK_URL = 'TU_URL_DE_N8N_AQUÍ'; 
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setStatus('success');
+        alert('¡Gracias! Hemos recibido tu información correctamente.');
+        // Limpiamos el formulario después del éxito
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          firmType: 'Other',
+          message: ''
+        });
+      } else {
+        throw new Error('Error en la respuesta del servidor');
+      }
+    } catch (error) {
+      console.error('Error enviando a n8n:', error);
+      setStatus('error');
+      alert('Hubo un error al enviar el formulario. Por favor, intenta de nuevo.');
+    } finally {
+      // Volvemos al estado inicial después de 3 segundos si hubo éxito/error
+      setTimeout(() => setStatus('idle'), 3000);
+    }
   };
 
   return (
@@ -50,10 +84,11 @@ export default function ContactForm() {
               <input
                 type="text"
                 required
+                disabled={status === 'sending'}
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="Name"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
               />
             </div>
 
@@ -63,10 +98,11 @@ export default function ContactForm() {
               <input
                 type="email"
                 required
+                disabled={status === 'sending'}
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
                 placeholder="Email"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
               />
             </div>
 
@@ -76,10 +112,11 @@ export default function ContactForm() {
               <input
                 type="tel"
                 required
+                disabled={status === 'sending'}
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 placeholder="+1 (555) 123-4567"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
               />
             </div>
 
@@ -87,9 +124,10 @@ export default function ContactForm() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Firm Type</label>
               <select
+                disabled={status === 'sending'}
                 value={formData.firmType}
                 onChange={(e) => setFormData({...formData, firmType: e.target.value})}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
               >
                 <option>Other</option>
                 <option>Solo Practitioner</option>
@@ -106,20 +144,24 @@ export default function ContactForm() {
               Tell us about your tax season challenges
             </label>
             <textarea
+              disabled={status === 'sending'}
               value={formData.message}
               onChange={(e) => setFormData({...formData, message: e.target.value})}
               placeholder="Tell us about your tax season challenges"
               rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent disabled:bg-gray-100"
             />
           </div>
 
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 rounded-lg transition-colors"
+            disabled={status === 'sending'}
+            className={`w-full font-semibold py-4 rounded-lg transition-colors text-white ${
+              status === 'sending' ? 'bg-gray-400' : 'bg-orange-500 hover:bg-orange-600'
+            }`}
           >
-            Get Custom Quote
+            {status === 'sending' ? 'Sending...' : 'Get Custom Quote'}
           </button>
         </form>
       </div>
